@@ -2,7 +2,7 @@ import boto3
 import concurrent.futures
 import logging
 
-# Delete Clusters (add region)
+# Delete Clusters (add regions)
 
 
 logging.basicConfig(level=logging.INFO)
