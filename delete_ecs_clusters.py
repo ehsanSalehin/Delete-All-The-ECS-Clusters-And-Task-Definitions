@@ -46,7 +46,11 @@ def delete_clusters_in_region(region):
 
 def main():
     regions = [
-        'ap-northeast-3'
+        'ap-northeast-3','ap-northeast-3', 'us-east-1', 'us-east-2', 'us-west-1', 'us-west-2',
+        'ap-south-1', 'ap-northeast-2', 'ap-southeast-1', 'ap-southeast-2',
+        'ap-northeast-1', 'ca-central-1', 'eu-central-1', 'eu-west-1',
+        'eu-west-2', 'eu-west-3', 'eu-north-1', 'sa-east-1',
+        'ap-east-1', 'me-south-1', 'af-south-1'
     ]
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
@@ -59,7 +63,7 @@ if __name__ == "__main__":
 
 
 
-# Delete task definitions (add regions)
+# Delete task definitions (add regions) ==> for avtive tasks
 
 
 
@@ -104,7 +108,11 @@ def delete_clusters_in_region(region):
 
 def main():
     regions = [
-        'ap-northeast-3'
+        'ap-northeast-3', 'us-east-1', 'us-east-2', 'us-west-1', 'us-west-2',
+        'ap-south-1', 'ap-northeast-2', 'ap-southeast-1', 'ap-southeast-2',
+        'ap-northeast-1', 'ca-central-1', 'eu-central-1', 'eu-west-1',
+        'eu-west-2', 'eu-west-3', 'eu-north-1', 'sa-east-1',
+        'ap-east-1', 'me-south-1', 'af-south-1'
     ]
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
@@ -112,3 +120,54 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+# Delete task definitions (add regions) ==> for inavtive tasks
+
+
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def delete_task_definition(ecs_client, task_definition_arn):
+    try:
+        # Deregister the task definition
+        ecs_client.deregister_task_definition(taskDefinition=task_definition_arn)
+        logger.info(f"Deregistered inactive task definition {task_definition_arn}")
+    except Exception as e:
+        logger.error(f"Error deregistering inactive task definition {task_definition_arn}: {str(e)}")
+
+def delete_task_definitions_in_region(region):
+    ecs_client = boto3.client('ecs', region_name=region)
+    try:
+        # List only inactive task definitions
+        paginator = ecs_client.get_paginator('list_task_definitions')
+        inactive_count = 0
+        for page in paginator.paginate(status='INACTIVE'):
+            for task_definition_arn in page['taskDefinitionArns']:
+                delete_task_definition(ecs_client, task_definition_arn)
+                inactive_count += 1
+        logger.info(f"Processed {inactive_count} inactive task definitions in region {region}")
+    except Exception as e:
+        logger.error(f"Error processing region {region}: {str(e)}")
+
+def main():
+    regions = [
+        'ap-northeast-3', 'us-east-1', 'us-east-2', 'us-west-1', 'us-west-2',
+        'ap-south-1', 'ap-northeast-2', 'ap-southeast-1', 'ap-southeast-2',
+        'ap-northeast-1', 'ca-central-1', 'eu-central-1', 'eu-west-1',
+        'eu-west-2', 'eu-west-3', 'eu-north-1', 'sa-east-1',
+        'ap-east-1', 'me-south-1', 'af-south-1'
+    ]
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        executor.map(delete_task_definitions_in_region, regions)
+
+if __name__ == "__main__":
+    main()
+
